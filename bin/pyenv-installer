@@ -7,6 +7,16 @@ if [ -z "$PYENV_ROOT" ]; then
   PYENV_ROOT="${HOME}/.pyenv"
 fi
 
+if [ "${SKIP_UPDATE:-false}" != "true" ]; then
+    if [ -f '/etc/os-release' ] && \
+            [ "$(grep -c "ubuntu" /etc/os-release)" -gt 0 ]; then
+        echo "Enter your password to install any dependencies" >&2
+        sudo apt-get update
+        sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
+            libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git
+    fi
+fi
+
 shell="$1"
 if [ -z "$shell" ]; then
   shell="$(ps c -p "$PPID" -o 'ucomm=' 2>/dev/null || true)"
@@ -30,13 +40,13 @@ if ! command -v git 1>/dev/null 2>&1; then
   exit 1
 fi
 
-checkout "git://github.com/yyuu/pyenv.git"            "${PYENV_ROOT}"
-checkout "git://github.com/yyuu/pyenv-doctor.git"     "${PYENV_ROOT}/plugins/pyenv-doctor"
-checkout "git://github.com/yyuu/pyenv-installer.git"  "${PYENV_ROOT}/plugins/pyenv-installer"
-checkout "git://github.com/yyuu/pyenv-pip-rehash.git" "${PYENV_ROOT}/plugins/pyenv-pip-rehash"
-checkout "git://github.com/yyuu/pyenv-update.git"     "${PYENV_ROOT}/plugins/pyenv-update"
-checkout "git://github.com/yyuu/pyenv-virtualenv.git" "${PYENV_ROOT}/plugins/pyenv-virtualenv"
-checkout "git://github.com/yyuu/pyenv-which-ext.git"  "${PYENV_ROOT}/plugins/pyenv-which-ext"
+checkout "https://github.com/yyuu/pyenv.git"            "${PYENV_ROOT}"
+checkout "https://github.com/yyuu/pyenv-doctor.git"     "${PYENV_ROOT}/plugins/pyenv-doctor"
+#checkout "https://github.com/yyuu/pyenv-installer.git"  "${PYENV_ROOT}/plugins/pyenv-installer"
+checkout "https://github.com/yyuu/pyenv-pip-rehash.git" "${PYENV_ROOT}/plugins/pyenv-pip-rehash"
+checkout "https://github.com/yyuu/pyenv-update.git"     "${PYENV_ROOT}/plugins/pyenv-update"
+checkout "https://github.com/yyuu/pyenv-virtualenvwrapper.git" "${PYENV_ROOT}/plugins/pyenv-virtualenvwrapper"
+checkout "https://github.com/yyuu/pyenv-which-ext.git"  "${PYENV_ROOT}/plugins/pyenv-which-ext"
 
 if ! command -v pyenv 1>/dev/null; then
   { echo
@@ -63,20 +73,34 @@ if ! command -v pyenv 1>/dev/null; then
     ;;
   esac
 
+  loadpath="$(echo "${PYENV_ROOT}" | sed -e "s,$HOME,\$HOME,")"
+
   { echo "# Load pyenv automatically by adding"
     echo "# the following to ${profile}:"
     echo
     case "$shell" in
     fish )
-      echo "set -x PATH \"\$HOME/.pyenv/bin\" \$PATH"
+      echo "set -x PATH \"${loadpath}/bin\" \$PATH"
       echo 'status --is-interactive; and . (pyenv init -|psub)'
-      echo 'status --is-interactive; and . (pyenv virtualenv-init -|psub)'
       ;;
     * )
-      echo "export PATH=\"\$HOME/.pyenv/bin:\$PATH\""
+      echo "export PATH=\"${loadpath}/bin:\$PATH\""
+      echo "export WORKON_HOME=\"\$HOME/.local/share/virtualenvs\""
+      echo "export PROJECT_HOME=\"\$HOME/code\""
       echo "eval \"\$(pyenv init -)\""
-      echo "eval \"\$(pyenv virtualenv-init -)\""
       ;;
     esac
+    echo
+    echo "# There's some post install steps for virtualenvwrapper. Do above"
+    echo "# commands or source ${profile} then run the following"
+    echo
+    echo "pyenv install 2.7.8"
+    echo "pyenv global 2.7.8"
+    echo "pyenv virtualenvwrapper"
+    echo
+    echo "# Add the following to ${profile} to load automatically"
+    echo
+    echo "pyenv virtualenvwrapper"
+    echo
   } >&2
 fi
