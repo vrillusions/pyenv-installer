@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim: set et sw=2 sts=2 ts=2 :
 
 set -e
 [ -n "$PYENV_DEBUG" ] && set -x
@@ -8,13 +9,13 @@ if [ -z "$PYENV_ROOT" ]; then
 fi
 
 if [ "${SKIP_UPDATE:-false}" != "true" ]; then
-    if [ -f '/etc/os-release' ] && \
-            [ "$(grep -c "ubuntu" /etc/os-release)" -gt 0 ]; then
-        echo "Enter your password to install any dependencies" >&2
-        sudo apt-get update
-        sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
-            libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git
-    fi
+  if [ -f '/etc/os-release' ] && \
+      [ "$(grep -c "ubuntu" /etc/os-release)" -gt 0 ]; then
+    echo "Enter your password to install any dependencies" >&2
+    sudo apt-get update
+    sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
+      libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git
+  fi
 fi
 
 shell="$1"
