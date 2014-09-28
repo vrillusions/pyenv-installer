@@ -4,19 +4,14 @@ This tools is used to install `pyenv` and friends.
 
 This plugin was inspired from [rbenv-installer](https://github.com/fesplugas/rbenv-installer).
 
-## Changes from upstream
-
-* Use `virtualenvwrapper` instead of `virtualenv`
-* Install dependencies in Ubuntu. Can be disabled with `export SKIP_UPDATE=true`.
-* Switch git clone urls back to https for extra security
-* Couple places in output recommend `XDG_DATA_HOME` directory of `$HOME/.local/share` for data storage
-
 ## Installation
 
 Install [pyenv](https://github.com/yyuu/pyenv) and friends by running:
 
     $ export PYENV_ROOT="${HOME}/.local/share/pyenv"
     $ curl -L https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer | bash
+
+See the file for a list of all environment variables that can be set
 
 ## Updating
 
@@ -31,6 +26,13 @@ Everything of `pyenv` are installed within `$PYENV_ROOT` (default: `~/.pyenv`). 
     $ rm -fr ~/.pyenv
 
 ## Version History
+
+#### forked from upstream, no version yet
+
+* Use `virtualenvwrapper` instead of `virtualenv`
+* Install dependencies in Ubuntu. Can be disabled with `export PYENV_SKIP_UPDATE=true`.
+* Switch git clone urls back to https for extra security
+* Couple places in output recommend `XDG_DATA_HOME` directory of `$HOME/.local/share` for data storage
 
 #### 20130601
 

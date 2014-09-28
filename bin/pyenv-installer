@@ -1,5 +1,35 @@
 #!/usr/bin/env bash
 # vim: set et sw=2 sts=2 ts=2 :
+#
+# Install pyenv w/ virtualenvwrapper
+#
+# Environment variables this script uses:
+#
+# XDG_DATA_HOME (set by system)
+#   You'll see this mentioned as recommended in place of $HOME. May not always
+#   be set though. Typically on linux its "${HOME}/.local/share"
+#
+# PYENV_DEBUG=
+#   if it has any value then turns on debugging
+#
+# PYENV_ROOT="${HOME}/.pyenv"
+#   where pyenv is installed too. alternative suggestion is
+#   "${XDG_DATA_HOME}/pyenv"
+#
+# PYENV_SKIP_UPDATE=
+#   if on ubuntu this will install the dependencies needed. Set this to any
+#   value, like 'yes', to skip installing these.
+#
+# PYENV_INITIAL_VERSION=none (not implemented yet)
+#   initial version of python to install. This is required for the
+#   virtualenvwrapper part of config and this version can not be removed or it
+#   may break virtualenvwrapper. Accepts 'none', any version that pyenv knows
+#   of, or 'system' which will detect the current version of python the system
+#   has and install that with pyenv.
+#
+# WORKON_HOME="${HOME}/.virtualenvs"
+#   Where virtualenvs live. Again suggest "${XDG_DATA_HOME}/virtualenvs" to
+#   keep home directory clean.
 
 set -e
 [ -n "$PYENV_DEBUG" ] && set -x
@@ -8,9 +38,16 @@ if [ -z "$PYENV_ROOT" ]; then
   PYENV_ROOT="${HOME}/.pyenv"
 fi
 
-if [ "${SKIP_UPDATE:-false}" != "true" ]; then
+if [ -z "$PYENV_INITIAL_VERSION" ]; then
+  PYENV_INITIAL_VERSION='none'
+elif [ "$PYENV_INITIAL_VERSION" == "system" ]; then
+  system_python="$(python -V 2>&1)"
+  PYENV_INITIAL_VERSION="${system_python##* }"
+fi
+
+if [ -z "$PYENV_SKIP_UPDATE" ]; then
   if [ -f '/etc/os-release' ] && \
-      [ "$(grep -c "ubuntu" /etc/os-release)" -gt 0 ]; then
+      [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
     echo "Enter your password to install any dependencies" >&2
     sudo apt-get update
     sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
