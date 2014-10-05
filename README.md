@@ -12,7 +12,7 @@ If you already have `virtualenvwrapper` you will need to remove it and all the v
 
 Install [pyenv](https://github.com/yyuu/pyenv) and friends by running:
 
-    $ wget https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/etc/initial-env
+    $ curl -L -O https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/etc/initial-env
     # Edit initial-env to your liking
     $ source ./initial-env
     $ curl -L https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer | bash
