@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # vim: set et sw=2 sts=2 ts=2 :
 #
-# Install pyenv w/ virtualenvwrapper
+# Install pyenv w/ virtualenv
 #
 # Environment variables this script uses:
 #
@@ -21,29 +21,16 @@
 #   value, like 'yes', to skip installing these.
 #
 # PYENV_INITIAL_VERSION=none (not implemented yet)
-#   initial version of python to install. This is required for the
-#   virtualenvwrapper part of config and this version can not be removed or it
-#   may break virtualenvwrapper. Accepts 'none', any version that pyenv knows
-#   of, or 'system' which will detect the current version of python the system
-#   has and install that with pyenv.
+#   initial version of python to install.  Accepts 'none', any version that
+#   pyenv knows of, or 'system' which will detect the current version of python
+#   the system has and install that with pyenv.
 #
-# WORKON_HOME="$HOME/.virtualenvs"
-#   Where virtualenvs live. Again suggest "${XDG_DATA_HOME}/virtualenvs" to
-#   keep home directory clean. If not set then default is $HOME/.virtualenvs
-#
-# PROJECT_HOME=
-#   Used by virtualenvwrapper when creating a new project. If defined it will be
-#   added to profile.
 
 set -e
 [ -n "$PYENV_DEBUG" ] && set -x
 
 if [ -z "$PYENV_ROOT" ]; then
   PYENV_ROOT="${HOME}/.pyenv"
-fi
-
-if [ -z "$WORKON_HOME" ]; then
-  WORKON_HOME="${HOME}/.virtualenvs"
 fi
 
 if [ -z "$PYENV_INITIAL_VERSION" ]; then
@@ -58,7 +45,6 @@ fi
   echo "Press control-c to cancel and make changes"
   echo
   echo "PYENV_ROOT: $PYENV_ROOT"
-  echo "WORKON_HOME: $WORKON_HOME"
   echo "PYENV_SKIP_UPDATE: ${PYENV_SKIP_UPDATE:-(blank)}"
   echo "PYENV_INITIAL_VERSION: $PYENV_INITIAL_VERSION"
   echo
@@ -67,9 +53,11 @@ fi
 sleep 5
 
 if [ -z "$PYENV_SKIP_UPDATE" ]; then
-  if [ -f '/etc/os-release' ] && \
-      [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
-    echo "Enter your password to install any dependencies" >&2
+  if [ ! -f '/etc/os-release' ]; then
+    echo "Can't read /etc/os-release, unable to determine OS" >&2
+  elif [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
+    echo "Installing dependencies for ubuntu" >&2
+    echo "You may be prompted for sudo password" >&2
     sudo apt-get update
     sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
       libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git
@@ -109,7 +97,7 @@ checkout "https://github.com/yyuu/pyenv-doctor.git"     "${PYENV_ROOT}/plugins/p
 #checkout "https://github.com/yyuu/pyenv-installer.git"  "${PYENV_ROOT}/plugins/pyenv-installer"
 checkout "https://github.com/yyuu/pyenv-pip-rehash.git" "${PYENV_ROOT}/plugins/pyenv-pip-rehash"
 checkout "https://github.com/yyuu/pyenv-update.git"     "${PYENV_ROOT}/plugins/pyenv-update"
-checkout "https://github.com/yyuu/pyenv-virtualenvwrapper.git" "${PYENV_ROOT}/plugins/pyenv-virtualenvwrapper"
+checkout "https://github.com/yyuu/pyenv-virtualenv.git" "${PYENV_ROOT}/plugins/pyenv-virtualenv"
 checkout "https://github.com/yyuu/pyenv-which-ext.git"  "${PYENV_ROOT}/plugins/pyenv-which-ext"
 
 if ! command -v pyenv 1>/dev/null; then
@@ -149,13 +137,13 @@ if ! command -v pyenv 1>/dev/null; then
     fish )
       echo "set -x PATH \"${pyenv_path}/bin\" \$PATH"
       echo 'status --is-interactive; and . (pyenv init -|psub)'
+      echo 'status --is-interactive; and . (pyenv virtualenv-init -|psub)'
       ;;
     * )
       echo "export PYENV_ROOT=\"${pyenv_path}\""
       echo "export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
-      echo "export WORKON_HOME=\"${workon_home_path}\""
-      echo "export PROJECT_HOME=\"${project_home_path}\" #this one is optional"
       echo "eval \"\$(pyenv init -)\""
+      echo "eval \"\$(pyenv virtualenv-init -)\""
       echo
       ;;
     esac
@@ -170,11 +158,8 @@ if ! command -v pyenv 1>/dev/null; then
     echo >>"${profile}"
     echo "export PYENV_ROOT=\"${pyenv_path}\"" >>"${profile}"
     echo "export PATH=\"\$PYENV_ROOT/bin:\$PATH\"" >>"${profile}"
-    echo "export WORKON_HOME=\"${workon_home_path}\"" >>"${profile}"
-    if [ -n $PROJECT_HOME ]; then
-      echo "export PROJECT_HOME=\"$(filter_home "${PROJECT_HOME}")\"" >>"${profile}"
-    fi
     echo "eval \"\$(pyenv init -)\"" >>"${profile}"
+    echo "eval \"\$(pyenv virtualenv-init -)\"" >>"${profile}"
     source "${profile}"
     if [ $(command -V pyenv &>/dev/null; echo $?) -ne 0 ]; then
       echo "pyenv still doesn't exist, aborting install" >&2
@@ -184,30 +169,15 @@ if ! command -v pyenv 1>/dev/null; then
 fi   # end if pyenv not found
 
 if [ "$PYENV_INITIAL_VERSION" != 'none' ]; then
+  echo "Starting install of ${PYENV_INITIAL_VERSION}" >&2
+  echo "You may not see any output for a while" >&2
   pyenv install $PYENV_INITIAL_VERSION
   pyenv global $PYENV_INITIAL_VERSION
-  pyenv virtualenvwrapper
-  echo "pyenv virtualenvwrapper" >>"${profile}"
-  echo >&2
-  echo "finished setting up virtualenvwrapper" >&2
-  echo 'relogin or `source ~/.bash_profile` to get started' >&2
-else
-  { echo
-    echo "# There's some post install steps for virtualenvwrapper. Do above"
-    echo "# commands or source ${profile} if needed then run the following"
-    echo
-    echo "pyenv install 2.7.8"
-    echo "pyenv global 2.7.8"
-    echo "pyenv virtualenvwrapper"
-    echo
-    echo "# Add the following to ${profile} to load automatically"
-    echo
-    echo "pyenv virtualenvwrapper"
-    echo
-  } >&2
 fi
 
-echo >&2
-echo "Finished install: Have a nice day!" >&2
+{ echo
+  echo "Finished install: relogin or \`source ${profile}\` to get started"
+  echo "Have a nice day!"
+} >&2
 
 exit 0

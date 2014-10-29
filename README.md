@@ -6,7 +6,7 @@ This plugin was inspired from [rbenv-installer](https://github.com/fesplugas/rbe
 
 ## Existing installations
 
-If you already have `virtualenvwrapper` you will need to remove it and all the various things in your profile so it doesn't load. There's a couple ways of doing the install (ex `virtualenv-burrito`) so check where you got it for uninstall instructions.
+If you already have `virtualenv` or `virtualenvwrapper` you will need to remove it and all the various things in your profile so it doesn't load. There's a couple ways of doing the install (ex `virtualenv-burrito`) so check where you got it for uninstall instructions.
 
 ## Installation
 
@@ -18,6 +18,26 @@ Install [pyenv](https://github.com/yyuu/pyenv) and friends by running:
     $ curl -L https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer | bash
 
 See the file for a list of all environment variables that can be set
+
+## Workflow
+
+If used to `virtualenvwrapper` then the workflow changes a bit. What used to be this with `virtualenvwrapper`
+
+    mkvirtualenv SpiffyEnv
+    cd ~/code/SpiffyEnv
+    workon SpiffyEnv
+
+Becomes:
+
+    pyenv virtualenv SpiffyEnv
+    cd ~/code/SpiffyEnv
+    pyenv local SpiffyEnv
+
+If not using the current active version, then you can set a version with `pyenv virtualenv 3.4 SpiffyEnv`.
+
+Note that the concept of project directories doesn't exist in `pyenv` so you can't have `workon` automatically go to the project directory. You can, however, set it so when you go to that project's directory is automatically loads the correct 'version' (`pyenv` considers an actual version and a virtualenv version as the same as far as `pyenv versions` is concerned).
+
+What do when running a pyenv virtualenv from cron is yet to be explored
 
 ## Updating
 

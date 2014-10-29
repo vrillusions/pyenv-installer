@@ -8,9 +8,4 @@
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 export PYENV_ROOT="$XDG_DATA_HOME/pyenv"
-export WORKON_HOME="$XDG_DATA_HOME/virtualenvs"
-export PROJECT_HOME="$HOME/code"
 export PYENV_INITIAL_VERSION='system'
-
-# PROJECT_HOME directory isn't created automatically
-mkdir -p "$PROJECT_HOME"
