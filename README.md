@@ -15,9 +15,9 @@ Install [pyenv](https://github.com/yyuu/pyenv) and friends by running:
     $ curl -L -O https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/etc/initial-env
     # Edit initial-env to your liking
     $ source ./initial-env
-    $ curl -L https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer | bash
+    $ curl -s -L https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer | bash
 
-See the file for a list of all environment variables that can be set
+See the file for a list of all environment variables that can be set. Also there is currently a bug, #2, where if you have the installer setup packages in ubuntu it won't continue the script afterwards. Current workaround is running the second curl command again.
 
 ## Workflow
 
@@ -35,7 +35,7 @@ Becomes:
 
 If not using the current active version, then you can set a version with `pyenv virtualenv 3.4 SpiffyEnv`.
 
-Note that the concept of project directories doesn't exist in `pyenv` so you can't have `workon` automatically go to the project directory. You can, however, set it so when you go to that project's directory is automatically loads the correct 'version' (`pyenv` considers an actual version and a virtualenv version as the same as far as `pyenv versions` is concerned).
+Note that the concept of project directories doesn't exist in `pyenv` so you can't have `workon` automatically go to the project directory. Calling `pyenv local SpiffyEnv` above creates a file in current directory called `.python-version` with the content `SpiffyEnv`. Now whenever you `cd` to that folder it will automatically update the `SpiffyEnv` environment for you. `pyenv` considers an actual version and a virtualenv version as the same as far as `pyenv versions` is concerned.
 
 What do when running a pyenv virtualenv from cron is yet to be explored
 
