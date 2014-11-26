@@ -15,9 +15,57 @@ Install [pyenv](https://github.com/yyuu/pyenv) and friends by running:
     $ curl -L -O https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/etc/initial-env
     # Edit initial-env to your liking
     $ source ./initial-env
-    $ curl -s -L https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer | bash
+    $ bash <(curl -fsSL https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer)
 
-See the file for a list of all environment variables that can be set. Also there is currently a bug, #2, where if you have the installer setup packages in ubuntu it won't continue the script afterwards. Current workaround is running the second curl command again.
+See the file for a list of all environment variables that can be set. That final line is just a shortcut for calling curl and then run the script afterwards.
+
+## OS X setup
+
+On OS X it's better to just use [homebrew](http://brew.sh).  Once homebrew is up and running then run the following to install everything
+
+    brew install readline pyenv pyenv-pip-rehash pyenv-virtualenv pyenv-which-ext
+    # This next line is optional but speeds up compiling
+    brew install ccache pyenv-ccache
+
+Then add the following to your `~/.bash_profile` to setup pip and vritualenv. I try to move configs to `~/.local/share` and `~/.config` when I can but the default `PYENV_ROOT` is `~/.pyenv` if you want to change it.
+
+    export PYENV_ROOT="${HOME}/.local/share/pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    if [[ $(which pyenv &>/dev/null; echo $?) -eq 0 ]]; then
+        # virtualenv modifies the PROMPT_COMMAND by placing it's command in front of
+        # what was previously there. This swaps it so previous prompt command is
+        # first and then virtualenv's. If this causes problems for you then remove
+        # the lines before and after the evals
+        #
+        # Skip this if we already loaded it
+        if [[ "${LOADED_PYENV:-no}" != "yes" ]]; then
+            _previous_prompt_command="${PROMPT_COMMAND}"
+            unset PROMPT_COMMAND
+            eval "$(pyenv init -)"
+            eval "$(pyenv virtualenv-init -)"
+            export PROMPT_COMMAND="${_previous_prompt_command};${PROMPT_COMMAND}"
+            unset _previous_prompt_command
+            # In Yosemite you need to set the CFLAGS so it includes a couple extra
+            # locations. If you run in to issues compiling other software than try
+            # commenting out these lines.
+            # Xcode
+            export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
+            # Homebrew installed readline
+            export CFLAGS="-I/usr/local/opt/readline/include ${CFLAGS}"
+            export LOADED_PYENV='yes'
+        fi
+    fi
+
+Then setup your initial version like so.  A good default version is the same that came with your system.  Run `python -V` to see the current version. You'll need to relogin or run the above options manually so you can use `pyenv`.
+
+    pyenv install --list
+    # choose the version you want
+    # Important: make sure CFLAGS is set from above or you'll get compile errors
+    pyenv install 2.7.8
+    pyenv global 2.7.8
+    pyenv version
+
+That final command should show your current version of python is 2.7.8 and coming from pyenv.
 
 ## Workflow
 
@@ -55,11 +103,11 @@ Everything of `pyenv` are installed within `$PYENV_ROOT` (default: `~/.pyenv`). 
 
 #### forked from upstream, no version yet
 
-* Use `virtualenvwrapper` instead of `virtualenv`
-* Install dependencies in Ubuntu. Can be disabled with `export PYENV_SKIP_UPDATE=true`.
+* Install dependencies in Ubuntu and RedHat family (tested with CentOS 6). Can be disabled with `export PYENV_SKIP_UPDATE=true`.
 * Switch git clone urls back to https for extra security
 * Couple places in output recommend `XDG_DATA_HOME` directory of `$HOME/.local/share` for data storage
 * Can install a version of python, which is needed for `virtualenvwrapper` (bash only)
+* Include instructions on how to setup on OS X
 
 #### 20130601
 
@@ -69,7 +117,7 @@ Everything of `pyenv` are installed within `$PYENV_ROOT` (default: `~/.pyenv`). 
 
 (The MIT License)
 
-* Copyright (c) 2013 Yamashita, Yuu
+* Copyright (c) 2013-2014 Yamashita, Yuu and Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

@@ -20,7 +20,7 @@
 #   if on ubuntu this will install the dependencies needed. Set this to any
 #   value, like 'yes', to skip installing these.
 #
-# PYENV_INITIAL_VERSION=none (not implemented yet)
+# PYENV_INITIAL_VERSION=none
 #   initial version of python to install.  Accepts 'none', any version that
 #   pyenv knows of, or 'system' which will detect the current version of python
 #   the system has and install that with pyenv.
@@ -53,14 +53,27 @@ fi
 sleep 5
 
 if [ -z "$PYENV_SKIP_UPDATE" ]; then
-  if [ ! -f '/etc/os-release' ]; then
-    echo "Can't read /etc/os-release, unable to determine OS" >&2
-  elif [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
-    echo "Installing dependencies for ubuntu" >&2
+  if [ -f '/etc/os-release' ]; then
+    if [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
+      echo "Installing dependencies for ubuntu" >&2
+      echo "You may be prompted for sudo password" >&2
+      sudo apt-get update
+      sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
+        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git
+    else
+      echo "unable to determine OS based off /etc/os-release" >&2
+    fi
+  elif [ -f '/etc/redhat-release' ]; then
+    echo "Installing dependencies for redhat flavors" >&2
     echo "You may be prompted for sudo password" >&2
-    sudo apt-get update
-    sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
-      libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm git
+    sudo yum install -y zlib-devel bzip2 bzip2-devel readline-devel \
+      sqlite sqlite-devel openssl-devel git
+  elif [ "$(uname -s)" == "Darwin" ]; then
+    echo 'On OS X use homebrew. See readme for instructions.' >&2
+    exit 1
+  else
+    echo "unable to determine OS" >&2
+    exit 1
   fi
 fi
 
