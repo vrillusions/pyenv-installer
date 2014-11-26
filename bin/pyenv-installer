@@ -66,7 +66,7 @@ if [ -z "$PYENV_SKIP_UPDATE" ]; then
   elif [ -f '/etc/redhat-release' ]; then
     echo "Installing dependencies for redhat flavors" >&2
     echo "You may be prompted for sudo password" >&2
-    sudo yum install -y zlib-devel bzip2 bzip2-devel readline-devel \
+    sudo yum install -y gcc patch zlib-devel bzip2 bzip2-devel readline-devel \
       sqlite sqlite-devel openssl-devel git
   elif [ "$(uname -s)" == "Darwin" ]; then
     echo 'On OS X use homebrew. See readme for instructions.' >&2
@@ -142,25 +142,28 @@ if ! command -v pyenv 1>/dev/null; then
   workon_home_path="$(filter_home "${WORKON_HOME}")"
   project_home_path="$(filter_home "${PROJECT_HOME:-$HOME/code}")"
 
-  { echo "# Load pyenv automatically by adding"
-    echo "# the following to $(filter_home "${profile}"):"
-    echo "# if you set PYENV_INITIAL_VERSION this is done for you"
-    echo
-    case "$shell" in
-    fish )
-      echo "set -x PATH \"${pyenv_path}/bin\" \$PATH"
-      echo 'status --is-interactive; and . (pyenv init -|psub)'
-      echo 'status --is-interactive; and . (pyenv virtualenv-init -|psub)'
-      ;;
-    * )
-      echo "export PYENV_ROOT=\"${pyenv_path}\""
-      echo "export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
-      echo "eval \"\$(pyenv init -)\""
-      echo "eval \"\$(pyenv virtualenv-init -)\""
+  if [ "$PYENV_INITIAL_VERSION" == 'none' ]; then
+    { echo "# Load pyenv automatically by adding"
+      echo "# the following to $(filter_home "${profile}"):"
+      echo "# if you set PYENV_INITIAL_VERSION this is done for you"
       echo
-      ;;
-    esac
-  } >&2
+      case "$shell" in
+      fish )
+        echo "set -x PATH \"${pyenv_path}/bin\" \$PATH"
+        echo 'status --is-interactive; and . (pyenv init -|psub)'
+        echo 'status --is-interactive; and . (pyenv virtualenv-init -|psub)'
+        ;;
+      * )
+        echo "# See readme file for a more enhanced version"
+        echo "export PYENV_ROOT=\"${pyenv_path}\""
+        echo "export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
+        echo "eval \"\$(pyenv init -)\""
+        echo "eval \"\$(pyenv virtualenv-init -)\""
+        echo
+        ;;
+      esac
+    } >&2
+  fi
 
   if [ "$PYENV_INITIAL_VERSION" != 'none' ]; then
     if [ "$shell" != 'bash' ]; then
@@ -168,11 +171,31 @@ if ! command -v pyenv 1>/dev/null; then
       exit 1
     fi
 
-    echo >>"${profile}"
-    echo "export PYENV_ROOT=\"${pyenv_path}\"" >>"${profile}"
-    echo "export PATH=\"\$PYENV_ROOT/bin:\$PATH\"" >>"${profile}"
-    echo "eval \"\$(pyenv init -)\"" >>"${profile}"
-    echo "eval \"\$(pyenv virtualenv-init -)\"" >>"${profile}"
+    { echo >>"${profile}"
+      echo '# Begin lines added by pyenv-installer'
+      echo "export PYENV_ROOT=\"${pyenv_path}\""
+      echo 'export PATH="$PYENV_ROOT/bin:$PATH"'
+      echo 'eval "$(pyenv init -)"'
+      echo 'eval "$(pyenv virtualenv-init -)"'
+      echo 'if [[ $(which pyenv &>/dev/null; echo $?) -eq 0 ]]; then'
+      echo "    # virtualenv modifies the PROMPT_COMMAND by placing it's command in front of"
+      echo '    # what was previously there. This swaps it so previous prompt command is'
+      echo "    # first and then virtualenv's. If this causes problems for you then remove"
+      echo '    # the lines before and after the evals'
+      echo '    #'
+      echo '    # Skip this if we already loaded it'
+      echo '    if [[ "${LOADED_PYENV:-no}" != "yes" ]]; then'
+      echo '        _previous_prompt_command="${PROMPT_COMMAND}"'
+      echo '        unset PROMPT_COMMAND'
+      echo '        eval "$(pyenv init -)"'
+      echo '        eval "$(pyenv virtualenv-init -)"'
+      echo '        export PROMPT_COMMAND="${_previous_prompt_command};${PROMPT_COMMAND}"'
+      echo '        unset _previous_prompt_command'
+      echo '        export LOADED_PYENV="yes"'
+      echo '    fi'
+      echo 'fi'
+      echo '# End lines added by pyenv-installer'
+    } >>"${profile}"
     source "${profile}"
     if [ $(command -V pyenv &>/dev/null; echo $?) -ne 0 ]; then
       echo "pyenv still doesn't exist, aborting install" >&2
