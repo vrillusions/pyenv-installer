@@ -30,7 +30,7 @@ On OS X it's better to just use [homebrew](http://brew.sh).  Once homebrew is up
 Then add the following to your `~/.bash_profile` to setup pip and vritualenv. I try to move configs to `~/.local/share` and `~/.config` when I can but the default `PYENV_ROOT` is `~/.pyenv` if you want to change it.
 
     export PYENV_ROOT="${HOME}/.local/share/pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
+    export PATH="${PYENV_ROOT}/bin:${PATH}"
     if [[ $(which pyenv &>/dev/null; echo $?) -eq 0 ]]; then
         # virtualenv modifies the PROMPT_COMMAND by placing it's command in front of
         # what was previously there. This swaps it so previous prompt command is
@@ -45,16 +45,25 @@ Then add the following to your `~/.bash_profile` to setup pip and vritualenv. I 
             eval "$(pyenv virtualenv-init -)"
             export PROMPT_COMMAND="${_previous_prompt_command};${PROMPT_COMMAND}"
             unset _previous_prompt_command
-            # In Yosemite you need to set the CFLAGS so it includes a couple extra
-            # locations. If you run in to issues compiling other software than try
-            # commenting out these lines.
-            # Xcode
-            export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
-            # Homebrew installed readline
-            export CFLAGS="-I/usr/local/opt/readline/include ${CFLAGS}"
             export LOADED_PYENV='yes'
         fi
     fi
+
+    # In Yosemite you need to set the CFLAGS so it includes a couple extra
+    # locations. If you run in to issues compiling other software than try
+    # commenting out these lines. While this directly related to pyenv these options
+    # may be helpful even when not using pyenv
+    # Xcode
+    CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
+    # Homebrew installed readline
+    CFLAGS="-I/usr/local/opt/readline/include ${CFLAGS}"
+    # Other homebrew installed libraries
+    CFLAGS="${CFLAGS} -I/usr/local/include"
+    # Supposed to be LD_LIBRARY_PATH but seems this is the var in os x
+    [ -n "${LIBRARY_PATH}" ] && LIBRARY_PATH="${LIBRARY_PATH}:/usr/local/lib" \
+        || LIBRARY_PATH="/usr/local/lib"
+    export CFLAGS
+    export LIBRARY_PATH
 
 Then setup your initial version like so.  A good default version is the same that came with your system.  Run `python -V` to see the current version. You'll need to relogin or run the above options manually so you can use `pyenv`.
 
