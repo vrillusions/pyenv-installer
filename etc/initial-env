@@ -13,3 +13,9 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 #export PYENV_SKIP_UPDATE=yes
 export PYENV_ROOT="$XDG_DATA_HOME/pyenv"
 export PYENV_INITIAL_VERSION='system'
+
+# Ensure you don't have the noexec mount option for the value of TMPDIR.
+# Commonly TMPDIR (default /tmp) is mounted with noexec. This will mess up pyenv
+# as it downloads and runs files from that location.  A good alternative is is
+# $HOME/temp.
+export TMPDIR="${TMPDIR:-/tmp}"
