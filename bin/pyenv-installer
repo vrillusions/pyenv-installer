@@ -25,17 +25,18 @@
 #   pyenv knows of, or 'system' which will detect the current version of python
 #   the system has and install that with pyenv.
 #
+# BUG: Currently there's no way to set the default to 'system' as in "by default
+# use the version of python that is installed on the system and not pyenv".
+# Mainly because you have to install some pyenv version to get virtualenv
+#
 
 set -e
-[ -n "$PYENV_DEBUG" ] && set -x
+[ -n "${PYENV_DEBUG}" ] && set -x
 
-if [ -z "$PYENV_ROOT" ]; then
-  PYENV_ROOT="${HOME}/.pyenv"
-fi
+PYENV_ROOT="${PYENV_ROOT:-${HOME}/.pyenv}"
+PYENV_INITIAL_VERSION="${PYENV_INITIAL_VERSION:-none}"
 
-if [ -z "$PYENV_INITIAL_VERSION" ]; then
-  PYENV_INITIAL_VERSION='none'
-elif [ "$PYENV_INITIAL_VERSION" == "system" ]; then
+if [ "${PYENV_INITIAL_VERSION}" == "system" ]; then
   system_python="$(python -V 2>&1)"
   PYENV_INITIAL_VERSION="${system_python##* }"
 fi
@@ -44,15 +45,15 @@ fi
   echo "Proceeding with the following settings in 5 seconds"
   echo "Press control-c to cancel and make changes"
   echo
-  echo "PYENV_ROOT: $PYENV_ROOT"
+  echo "PYENV_ROOT: ${PYENV_ROOT}"
   echo "PYENV_SKIP_UPDATE: ${PYENV_SKIP_UPDATE:-(blank)}"
-  echo "PYENV_INITIAL_VERSION: $PYENV_INITIAL_VERSION"
+  echo "PYENV_INITIAL_VERSION: ${PYENV_INITIAL_VERSION}"
   echo
 } >&2
 
 sleep 5
 
-if [ -z "$PYENV_SKIP_UPDATE" ]; then
+if [ -z "${PYENV_SKIP_UPDATE}" ]; then
   if [ -f '/etc/os-release' ]; then
     if [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
       echo "Installing dependencies for ubuntu" >&2
@@ -78,8 +79,8 @@ if [ -z "$PYENV_SKIP_UPDATE" ]; then
 fi
 
 shell="$1"
-if [ -z "$shell" ]; then
-  shell="$(ps c -p "$PPID" -o 'ucomm=' 2>/dev/null || true)"
+if [ -z "${shell}" ]; then
+  shell="$(ps c -p "${PPID}" -o 'ucomm=' 2>/dev/null || true)"
   shell="${shell##-}"
   shell="${shell%% *}"
   shell="$(basename "${shell:-$SHELL}")"
@@ -100,7 +101,7 @@ filter_home() {
   echo "$1" | sed -e "s,$HOME,\$HOME,"
 }
 
-if ! command -v git 1>/dev/null 2>&1; then
+if ! command -v git 1>/dev/null; then
   echo "pyenv: Git is not installed, can't continue." >&2
   exit 1
 fi
@@ -121,9 +122,9 @@ if ! command -v pyenv 1>/dev/null; then
     echo
   } >&2
 
-  case "$shell" in
+  case "${shell}" in
   bash )
-    profile="$HOME/.bash_profile"
+    profile="${HOME}/.bash_profile"
     ;;
   zsh )
     profile="~/.zshrc"
@@ -143,12 +144,12 @@ if ! command -v pyenv 1>/dev/null; then
   workon_home_path="$(filter_home "${WORKON_HOME}")"
   project_home_path="$(filter_home "${PROJECT_HOME:-$HOME/code}")"
 
-  if [ "$PYENV_INITIAL_VERSION" == 'none' ]; then
+  if [ "${PYENV_INITIAL_VERSION}" == 'none' ]; then
     { echo "# Load pyenv automatically by adding"
       echo "# the following to $(filter_home "${profile}"):"
       echo "# if you set PYENV_INITIAL_VERSION this is done for you"
       echo
-      case "$shell" in
+      case "${shell}" in
       fish )
         echo "set -x PATH \"${pyenv_path}/bin\" \$PATH"
         echo 'status --is-interactive; and . (pyenv init -|psub)'
@@ -157,17 +158,15 @@ if ! command -v pyenv 1>/dev/null; then
       * )
         echo "# See readme file for a more enhanced version"
         echo "export PYENV_ROOT=\"${pyenv_path}\""
-        echo "export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
+        echo "export PATH=\"\${PYENV_ROOT}/bin:\${PATH}\""
         echo "eval \"\$(pyenv init -)\""
         echo "eval \"\$(pyenv virtualenv-init -)\""
         echo
         ;;
       esac
     } >&2
-  fi
-
-  if [ "$PYENV_INITIAL_VERSION" != 'none' ]; then
-    if [ "$shell" != 'bash' ]; then
+  else
+    if [ "${shell}" != 'bash' ]; then
       echo "Setting up initial version only supports bash shells currently" >&2
       exit 1
     fi
@@ -175,39 +174,39 @@ if ! command -v pyenv 1>/dev/null; then
     { echo >>"${profile}"
       echo '# Begin lines added by pyenv-installer'
       echo "export PYENV_ROOT=\"${pyenv_path}\""
-      echo 'export PATH="$PYENV_ROOT/bin:$PATH"'
-      echo 'if [[ $(which pyenv &>/dev/null; echo $?) -eq 0 ]]; then'
+      echo 'export PATH="${PYENV_ROOT}/bin:${PATH}"'
+      echo 'if command -v pyenv 1>/dev/null; then'
       echo "    # virtualenv modifies the PROMPT_COMMAND by placing it's command in front of"
       echo '    # what was previously there. This swaps it so previous prompt command is'
       echo "    # first and then virtualenv's. If this causes problems for you then remove"
       echo '    # the lines before and after the evals'
       echo '    #'
       echo '    # Skip this if we already loaded it'
-      echo '    if [[ "${LOADED_PYENV:-no}" != "yes" ]]; then'
+      echo '    if [[ "${PYENV_LOADED:-no}" != "yes" ]]; then'
       echo '        _previous_prompt_command="${PROMPT_COMMAND}"'
       echo '        unset PROMPT_COMMAND'
       echo '        eval "$(pyenv init -)"'
       echo '        eval "$(pyenv virtualenv-init -)"'
       echo '        export PROMPT_COMMAND="${_previous_prompt_command};${PROMPT_COMMAND}"'
       echo '        unset _previous_prompt_command'
-      echo '        export LOADED_PYENV="yes"'
+      echo '        export PYENV_LOADED="yes"'
       echo '    fi'
       echo 'fi'
       echo '# End lines added by pyenv-installer'
     } >>"${profile}"
     source "${profile}"
-    if [ $(command -V pyenv &>/dev/null; echo $?) -ne 0 ]; then
+    if ! command -v pyenv 1>/dev/null; then
       echo "pyenv still doesn't exist, aborting install" >&2
       exit 1
     fi
   fi
 fi   # end if pyenv not found
 
-if [ "$PYENV_INITIAL_VERSION" != 'none' ]; then
+if [ "${PYENV_INITIAL_VERSION}" != 'none' ]; then
   echo "Starting install of ${PYENV_INITIAL_VERSION}" >&2
   echo "You may not see any output for a while" >&2
-  pyenv install $PYENV_INITIAL_VERSION
-  pyenv global $PYENV_INITIAL_VERSION
+  pyenv install ${PYENV_INITIAL_VERSION}
+  pyenv global ${PYENV_INITIAL_VERSION}
 fi
 
 { echo

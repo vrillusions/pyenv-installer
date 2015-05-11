@@ -31,21 +31,21 @@ Then add the following to your `~/.bash_profile` to setup pip and vritualenv. I 
 
     export PYENV_ROOT="${HOME}/.local/share/pyenv"
     export PATH="${PYENV_ROOT}/bin:${PATH}"
-    if [[ $(which pyenv &>/dev/null; echo $?) -eq 0 ]]; then
+    if command -v pyenv 1>/dev/null; then
         # virtualenv modifies the PROMPT_COMMAND by placing it's command in front of
         # what was previously there. This swaps it so previous prompt command is
         # first and then virtualenv's. If this causes problems for you then remove
         # the lines before and after the evals
         #
         # Skip this if we already loaded it
-        if [[ "${LOADED_PYENV:-no}" != "yes" ]]; then
+        if [[ "${PYENV_LOADED:-no}" != "yes" ]]; then
             _previous_prompt_command="${PROMPT_COMMAND}"
             unset PROMPT_COMMAND
             eval "$(pyenv init -)"
             eval "$(pyenv virtualenv-init -)"
             export PROMPT_COMMAND="${_previous_prompt_command};${PROMPT_COMMAND}"
             unset _previous_prompt_command
-            export LOADED_PYENV='yes'
+            export PYENV_LOADED='yes'
         fi
     fi
 
