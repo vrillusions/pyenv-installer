@@ -38,14 +38,14 @@ Then add the following to your `~/.bash_profile` to setup pip and vritualenv. I 
         # the lines before and after the evals
         #
         # Skip this if we already loaded it
-        if [[ "${PYENV_LOADED:-no}" != "yes" ]]; then
-            _previous_prompt_command="${PROMPT_COMMAND}"
+        if [[ ${PYENV_INIT:-0} -ne 0 ]]; then
+            _previous_prompt_command="${PROMPT_COMMAND:+${PROMPT_COMMAND};}"
             unset PROMPT_COMMAND
             eval "$(pyenv init -)"
             eval "$(pyenv virtualenv-init -)"
-            export PROMPT_COMMAND="${_previous_prompt_command};${PROMPT_COMMAND}"
+            export PROMPT_COMMAND="${_previous_prompt_command}${PROMPT_COMMAND%;*}"
             unset _previous_prompt_command
-            export PYENV_LOADED='yes'
+            export PYENV_INIT=1
         fi
     fi
 
