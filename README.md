@@ -38,7 +38,7 @@ Then add the following to your `~/.bash_profile` to setup pip and vritualenv. I 
         # the lines before and after the evals
         #
         # Skip this if we already loaded it
-        if [[ ${PYENV_INIT:-0} -ne 0 ]]; then
+        if [[ ${PYENV_INIT:-0} -eq 0 ]]; then
             _previous_prompt_command="${PROMPT_COMMAND:+${PROMPT_COMMAND};}"
             unset PROMPT_COMMAND
             eval "$(pyenv init -)"

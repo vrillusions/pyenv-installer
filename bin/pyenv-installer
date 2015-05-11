@@ -182,7 +182,7 @@ if ! command -v pyenv 1>/dev/null; then
       echo '    # the lines before and after the evals'
       echo '    #'
       echo '    # Skip this if we already loaded it'
-      echo '    if [[ ${PYENV_INIT:-0} -ne 0 ]]; then'
+      echo '    if [[ ${PYENV_INIT:-0} -eq 0 ]]; then'
       echo '        _previous_prompt_command="${PROMPT_COMMAND:+${PROMPT_COMMAND};}"'
       echo '        unset PROMPT_COMMAND'
       echo '        eval "$(pyenv init -)"'
