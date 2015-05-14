@@ -3,19 +3,26 @@
 #
 #   source ./initial-env
 #
-# See the install script for what these mean and possible values
+# See readme for a more detailed explanation of these
 
-XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+# If you want to change PYENV_ROOT to be within XDG_DATA_HOME then uncomment the
+# next two lines. Default is to use ~/.pyenv
+#export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+#export PYENV_ROOT="$XDG_DATA_HOME/pyenv"
 
-# Uncomment this to turn on debug logging
+# Uncomment to turn on debug logging
 #export PYENV_DEBUG=yes
-# Uncomment this if you don't want this script to handle instaling dependencies
+
+# Uncomment if you don't want this script to handle instaling dependencies
 #export PYENV_SKIP_UPDATE=yes
-export PYENV_ROOT="$XDG_DATA_HOME/pyenv"
-export PYENV_INITIAL_VERSION='system'
+
+# Uncomment to auto configure bash and install an initial version of python
+# matching the version running on system
+#export PYENV_INITIAL_VERSION='system'
 
 # Ensure you don't have the noexec mount option for the value of TMPDIR.
 # Commonly TMPDIR (default /tmp) is mounted with noexec. This will mess up pyenv
 # as it downloads and runs files from that location.  A good alternative is is
-# $HOME/temp.
-export TMPDIR="${TMPDIR:-/tmp}"
+# $HOME/tmp. I commonly use $HOME/temp to make it more noticable if I'm in my
+# local ~/temp or the system /tmp.
+#export TMPDIR="${HOME}/tmp"

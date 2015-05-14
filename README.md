@@ -4,20 +4,46 @@ This tools is used to install `pyenv` and friends.
 
 This plugin was inspired from [rbenv-installer](https://github.com/fesplugas/rbenv-installer).
 
+## Table of contents
+
+- [Existing installations](#existing-installations)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [OS X setup](#os-x-setup)
+- [Workflow](#workflow)
+- [Updating](#updating)
+- [Uninstallation](#uninstallation)
+- [Version history](#version-history)
+
 ## Existing installations
 
-If you already have `virtualenv` or `virtualenvwrapper` you will need to remove it and all the various things in your profile so it doesn't load. There's a couple ways of doing the install (ex `virtualenv-burrito`) so check where you got it for uninstall instructions.
+If you already have `virtualenv` or `virtualenvwrapper` you will need to remove it and all the various things in your profile so it doesn't load. There's a couple ways of doing the install (ex [virtualenv-burrito](https://github.com/brainsik/virtualenv-burrito)) so check where you got it for uninstall instructions.
 
 ## Installation
 
 Install [pyenv](https://github.com/yyuu/pyenv) and friends by running:
 
     $ curl -L -O https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/etc/initial-env
-    # Edit initial-env to your liking
+    $ edit ./initial-env
     $ source ./initial-env
     $ bash <(curl -fsSL https://raw.githubusercontent.com/vrillusions/pyenv-installer/master/bin/pyenv-installer)
 
-See the file for a list of all environment variables that can be set. That final line is just a shortcut for calling curl and then run the script afterwards.
+See below for all the environment variables that you can set in `initial-env`
+
+## Configuration
+
+Configuration is handled via environment variables.  They all have defaults so if you just want to go with the defaults then you just need to run the final line from above.
+
+| Name | Default | Valid values | Description |
+| ---- | ------- | ------------ | ----------- |
+| `$PYENV_DEBUG` | (no value) | blank, any value | If this contains any value then extra debugging will be enabled in the script. Namely it prints every command as it's running it. |
+| `$PYENV_ROOT` | $HOME/.pyenv | any system path | All of pyenv will be installed here. If you want to keep your home directory clean you can use `"${XDG_DATA_HOME}/pyenv"`. |
+| `$PYENV_INITIAL_VERSION` | 'none' | 'none', 'system', any python version | If this is set to 'system' it will detect the system's version of python then install and make that the default.  If 'none' then it won't do an initial install.  Finally you can specify any version that `pyenv` knows of. Additionally, if this is set to something other than 'none' it will automatically configure your `~/.bash_profile` file. Currently this feature is only limited to Bash shells. |
+| `$PYENV_SKIP_UPDATE` | (no value) | blank, any value | If this contains any value then do not attempt to install prerequisites. This requires `sudo` privileges.  If you can't install packages on this system then set this to 'yes'. |
+| `$TMPDIR` | '/tmp' | any system path | (not pyenv specific) Pyenv uses the value of `$TMPDIR` when downloading and compiling python. There are several reasons you can't use the system path. Common ones are `/tmp` not having much disk space or `/tmp` being mounted with `noexec` option.  In such cases you may want to set this to `"${HOME}/tmp"` |
+| `$XDG_DATA_DIR` | (blank) or `~/.local/share` | any system path | (not pyenv specific) Depending on the OS it may or may not have these `$XDG_*` values. You can check by running `env | sort`. This is just a reminder to verify this exists before using it for the value of `$PYENV_ROOT`. |
+
+So in the default configuration the only way this version differs from upstream is it will attempt to install dependencies. The other main enhancement from the script, auto configure bash, requres you set `$PYENV_INITIAL_VERSION` to some value. I tend to use `"system"`. Note this doesn't mean the same as `pyenv global system`.  Will likely be changed to `"detect"` or similar in the future.
 
 ## OS X setup
 

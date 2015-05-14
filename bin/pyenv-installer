@@ -31,7 +31,7 @@
 #
 
 set -e
-[ -n "${PYENV_DEBUG}" ] && set -x
+[ -n "${PYENV_DEBUG:-}" ] && set -x
 
 PYENV_ROOT="${PYENV_ROOT:-${HOME}/.pyenv}"
 PYENV_INITIAL_VERSION="${PYENV_INITIAL_VERSION:-none}"
@@ -53,7 +53,7 @@ fi
 
 sleep 5
 
-if [ -z "${PYENV_SKIP_UPDATE}" ]; then
+if [ -z "${PYENV_SKIP_UPDATE:-}" ]; then
   if [ -f '/etc/os-release' ]; then
     if [ $(grep -c "ubuntu" /etc/os-release) -gt 0 ]; then
       echo "Installing dependencies for ubuntu" >&2
